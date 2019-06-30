@@ -3,7 +3,7 @@ This repository contains some of my Machine Learning Projects. These projects we
 
 # DLND Projects
 1. Predicting Bike Sharing Patterns
-2. Dog Breed Classifier
+2. [Dog Breed Classifier](./project-dog-classification/)
 3. Generate TV Scripts
 4. Generate Faces
 5. Deployging Sentiment Analysis Model
