@@ -8,6 +8,8 @@ The dataset is available on CSV files and is present in the [Bike-Sharing-Datase
 # Neural Network (Regression)
 My NeuralNetwork is defined in [my_answers.py](./my_answers.py). The model has 3 layers ( 1 input, 1 hidden and 1 output layer). 
 
+![Neural Network](./assets/neural_network.png)
+
 The input layer nodes are configurable and match the number of features in our dataset.
 The hidden layer nodes are also configurable and tested with 2 nodes.
 The output layer has 1 node and outputs the bike rental prediction for the given data.  
