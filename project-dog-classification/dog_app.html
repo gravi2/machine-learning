@@ -13726,7 +13726,7 @@ Percentage of dog images detected in dog_files_short = 80.00%
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -14443,7 +14443,7 @@ Test Accuracy: 12% (101/836)
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[2]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">## TODO: Specify data loaders</span>
@@ -14451,6 +14451,30 @@ Test Accuracy: 12% (101/836)
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-3-1aad2d6c6ac6&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-intense-fg ansi-bold">      1</span> <span class="ansi-red-fg">## TODO: Specify data loaders</span>
+<span class="ansi-green-fg">----&gt; 2</span><span class="ansi-red-fg"> </span>loaders_transfer <span class="ansi-blue-fg">=</span> loaders_scratch <span class="ansi-red-fg"># using the same loaders as scratch model</span>
+
+<span class="ansi-red-fg">NameError</span>: name &#39;loaders_scratch&#39; is not defined</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -14465,29 +14489,24 @@ Test Accuracy: 12% (101/836)
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[23]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">torchvision.models</span> <span class="k">as</span> <span class="nn">models</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 
-<span class="c1">## TODO: Specify model architecture </span>
-<span class="c1">#class TransferModel(models.VGG):</span>
+<span class="c1"># model architecture</span>
+<span class="c1"># Used Resnet model for transfer learning</span>
 <span class="n">model_transfer</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">resnet152</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="c1"># Freeze the weights of our pretrained model</span>
-<span class="c1">#for param in model_transfer.features.parameters():</span>
-<span class="c1">#    param.requires_grad = False</span>
 <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">model_transfer</span><span class="o">.</span><span class="n">children</span><span class="p">():</span>
     <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">child</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
         <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="c1"># replace the FC layer with our own, to match our output classes</span>
-<span class="c1">#model_transfer.classifier[6] = nn.Linear(model_transfer.classifier[6].in_features, 133)</span>
 <span class="n">model_transfer</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">model_transfer</span><span class="o">.</span><span class="n">fc</span><span class="o">.</span><span class="n">in_features</span><span class="p">,</span> <span class="mi">133</span><span class="p">)</span>
- 
 
 <span class="nb">print</span><span class="p">(</span><span class="n">model_transfer</span><span class="p">)</span>
-
 
 <span class="k">if</span> <span class="n">use_cuda</span><span class="p">:</span>
     <span class="n">model_transfer</span> <span class="o">=</span> <span class="n">model_transfer</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
@@ -14501,6 +14520,18 @@ Test Accuracy: 12% (101/836)
 <div class="output_wrapper">
 <div class="output">
 
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>Downloading: &#34;https://download.pytorch.org/models/resnet152-b121ed2d.pth&#34; to /root/.torch/models/resnet152-b121ed2d.pth
+100%|██████████| 241530880/241530880 [00:03&lt;00:00, 75156433.62it/s] 
+</pre>
+</div>
+</div>
 
 <div class="output_area">
 
@@ -14994,6 +15025,26 @@ Test Accuracy: 12% (101/836)
 </div>
 </div>
 
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">NameError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-2-e5d0132766a2&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-intense-fg ansi-bold">     15</span> print<span class="ansi-blue-fg">(</span>model_transfer<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     16</span> 
+<span class="ansi-green-fg">---&gt; 17</span><span class="ansi-red-fg"> </span><span class="ansi-green-fg">if</span> use_cuda<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">     18</span>     model_transfer <span class="ansi-blue-fg">=</span> model_transfer<span class="ansi-blue-fg">.</span>cuda<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     19</span> 
+
+<span class="ansi-red-fg">NameError</span>: name &#39;use_cuda&#39; is not defined</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -15014,6 +15065,12 @@ Test Accuracy: 12% (101/836)
 <li>I used the ResNet-152 pretrained model, since it has one of the best top 1 and top 5 error losses. </li>
 <li>I then freezed all the layers from this pretrained model</li>
 <li>Then I replaced the last fully connected layer (fc) with my own that classifies to 133 output features i.e dog breeds</li>
+<li><p>I have tried to explain the Reason why transfer learning is suitable for this task:</p>
+<p>By using transfer learning with ResNet-152 pretrained model, we get the advantage of optimized/precalculated/trained weights on all the convolutional layers. As the model was already trained on large datasets and possibly for large epochs, we don't need to redo this with out model. Instead we just freeze i.e keep unchanged, all the convolutional layers and only replace and train the last fully connected layer. Since our model expects classfication on 133 classes, we replace the last layer with a Linear layer that has out_features=133.</p>
+<p>This model performs better than our scratch model, as the model architecture is larged and is already preoptimized/pretrained on large dataset and performed better on even large set of classes. As seen in the model comparison table (<a href="https://pytorch.org/docs/stable/torchvision/models.html">https://pytorch.org/docs/stable/torchvision/models.html</a>), the ResNet-152 model has one of the best top 1 errors (5.94). We are able to get accuracy of 80% in under 10 epochs.</p>
+<p>Contrary, our scratch model architecture was much smaller and also trained with smaller dataset and epochs. As a result, the accuracy even with 40+ epochs was only about 12%.</p>
+<p>Using transfer learning, we can take advantage of the fact that the model was already optimized and trained. We don't need to repeat this ourselves again. We are able to build on top of efforts already done by pretrained models author. The result is a much better model and faster training on our model.</p>
+</li>
 </ol>
 
 </div>
@@ -15348,7 +15405,7 @@ Australian_shepherd_00853.jpg
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[91]:</div>
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">### TODO: Write a function that takes a path to an image as input</span>
@@ -15382,7 +15439,7 @@ Australian_shepherd_00853.jpg
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[39]:</div>
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">predict_breed_transfer</span><span class="p">(</span><span class="s1">&#39;/data/dog_images/train/001.Affenpinscher/Affenpinscher_00001.jpg&#39;</span><span class="p">))</span>
@@ -15404,8 +15461,8 @@ Australian_shepherd_00853.jpg
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>Petit basset griffon vendeen
-Xoloitzcuintli
+<pre>Golden retriever
+Wirehaired pointing griffon
 </pre>
 </div>
 </div>
@@ -15477,7 +15534,17 @@ Xoloitzcuintli
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><strong>Answer:</strong> (Three possible points for improvement)</p>
+<p><strong>Answer:</strong> 
+The predictions seems rather good, based on my limited knowledge of dog breeds ;)</p>
+<p>Some possible points for improvement for the algorithm:</p>
+<ol>
+<li><p>In case of Human images, I will like to show a sample picture of the matched dog breed. So that a novice user like me can visually see the similarity between a dog and the human image.</p>
+</li>
+<li><p>Also show the perdiction score as part of the output i.e how close (or percentage match) is the breed.</p>
+</li>
+<li><p>It will be cool, if we can morph the images between the human and the closest matched dog breed. ;)</p>
+</li>
+</ol>
 
 </div>
 </div>
