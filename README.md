@@ -4,6 +4,6 @@ This repository contains some of my Machine Learning Projects. These projects we
 # DLND Projects
 1. [Predicting Bike Sharing Patterns](./bike-sharing/)
 2. [Dog Breed Classifier](./project-dog-classification/)
-3. Generate TV Scripts
+3. [Seinfeld TV Script Generator](./seinfeld-tv-script-generation/)
 4. Generate Faces
 5. Deployging Sentiment Analysis Model
