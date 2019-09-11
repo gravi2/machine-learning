@@ -18,6 +18,9 @@ As part of the this project, I was able to achieve following tasks:
 ## Sample output (after just 30 epochs)
 ![Sample output](assets/sample-output.jpg)
 
+## Sample output (after just 40 epochs)
+![Sample output](assets/sample-output-40-epochs.jpg)
+
 ## Project Files
 1. The project folder contains:
     1. dlnd_face_generation.ipynb file, which is the Jupyter Notebook file for the project. It contains all the code and output from the project.
