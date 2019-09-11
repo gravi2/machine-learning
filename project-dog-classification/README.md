@@ -15,7 +15,7 @@ As part of the this project, I was able to achieve following tasks:
 
 1. Write a function that uses OpenCV to detect humans in a image and use to detect Humans vs Dogs in the samples images of the project.
 
-2. Write a Convolutional Neural Net (CNN) Model from scartch to achieve a accuracy of 12%. in 40 Epochs
+2. Write a Convolutional Neural Net (CNN) Model from scratch to achieve a accuracy of 12%. in 40 Epochs
 
 3. Load large sets of Human and Dog datasets, using ImageFolder dataloader.
 

@@ -16,8 +16,8 @@ The output layer has 1 node and outputs the bike rental prediction for the given
 
  The Neural network:
 1. Defines random weights for the input and hidden layers. 
-2. Defines forward pass and back propogation (Gradient descent) implementations.
-3. Trains the model using the traininig data from dataset.
+2. Defines forward pass and back propagation (Gradient descent) implementations.
+3. Trains the model using the training data from dataset.
 4. Validates the model by using part of the unseen dataset.
 
 # Accuracy

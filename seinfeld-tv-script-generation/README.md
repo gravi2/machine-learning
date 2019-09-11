@@ -20,11 +20,11 @@ As part of the this project, I was able to achieve following tasks:
 
 ## RNN Model 
 My RNN model had following architecture and steps. 
-1. Prepocess the Seinfeld data scripts and preprocess them as input words. 
+1. Preprocess the Seinfeld data scripts and preprocess them as input words. 
 2. Use an embedding layer as the first layer to pass the input and create lookup tables. This is to avoid  one-hot encoding and the related/wasted computation. 
 3. 2 layers of LSTM stacked over each other, to process the sequence of input words and carry the hidden state from one hidden layer to the other
 4. A fully connected linear layer that produces the scores of predicted next word.
-5. I experiments with various sequence_lenght, hidden dimmensions, learning rate to achieve the desidered model loss. 
+5. I experiments with various sequence_length, hidden dimensions, learning rate to achieve the desired model loss. 
 
 ## Project Files
 

@@ -1,14 +1,14 @@
 # Faces Generation ( Using DCGANs)
 
 ## Project Overview
-As part of this project, I built a DCGAN (Deep Convolutional Generative Adversarial Network) that learns to generate new human faces. The DCGAN, consist of a discriminator and a generator, that work as adversarial to each other. The discriminator works as a classifier for real images and fake images produced by generator. In doing so, the generator is getting trained to produce images that get classifed as real images. 
+As part of this project, I built a DCGAN (Deep Convolutional Generative Adversarial Network) that learns to generate new human faces. The DCGAN, consist of a discriminator and a generator, that work as adversarial to each other. The discriminator works as a classifier for real images and fake images produced by generator. In doing so, the generator is getting trained to produce images that get classified as real images. 
 As the models trains, the generator gets better and better at generating images that are closer to real images.
 
 As part of the this project, I was able to achieve following tasks:
 
 1. Explore and understand the concept of GANs and the potential of DCGANs.
 
-2. Implemented a fully functional DCGAN, including the discrimator model and the generator models,  using deep neural networks. 
+2. Implemented a fully functional DCGAN, including the discriminator model and the generator models,  using deep neural networks. 
 
 3. By training the model for 30 epochs, the losses from generator and discriminators were converging, there by improving the features and making images sharper.
 
