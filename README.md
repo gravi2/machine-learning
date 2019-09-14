@@ -6,7 +6,7 @@ This repository contains some of my Machine Learning Projects. These projects we
 2. [Dog Breed Classifier](./project-dog-classification/)
 3. [Seinfeld TV Script Generator](./seinfeld-tv-script-generation/)
 4. [Generate Faces](./face-generation/)
-5. Deploying Sentiment Analysis Model
+5. [Sentiment Analysis using SageMaker](./sentiment-analysis-sagemaker/)
 
 # Environment
 1. Its recommended to use Anaconda to manage your environment.
