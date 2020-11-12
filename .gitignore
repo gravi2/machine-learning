@@ -1,6 +1,7 @@
 wandb
 __pycache__
 Banana_Data
+Reacher_Data
 .ipynb_checkpoints
 *.log
 .vscode
