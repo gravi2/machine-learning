@@ -3,6 +3,7 @@ This repository contains Deep reinforcement projects done me as part of Udacity 
 
 # DLND Projects
 1. [Navigation](./navigation/)
+1. [Continuous Control](./continouscontrol/)
 
 # Environment
 1. Its recommended to use Anaconda to manage your environment.
