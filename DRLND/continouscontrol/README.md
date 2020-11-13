@@ -22,15 +22,36 @@ The environment is considered solved, when the average (over 100 episodes) of th
 
 ### Getting Started
 
-1. Setup the python environment using installing packages from the requirements.txt file present in the navigation folder.
+1. Setup the python environment using the packages from the requirements.txt file present in the navigation folder. Here are the steps to set this up using Anaconda as an example:
 
-2. The environment for windows is already present in the repo. But if you need to download it for other OS, use one of the links below.  You need only select the environment that matches your operating system:
+* Linux or Mac:
+   ```
+   conda create --name drlnd python=3.6
+   source activate drlnd
+   ```
+
+* Windows:
+    ```
+    conda create --name drlnd python=3.6 
+    activate drlnd
+    ```
+
+2. Clone this repository in a location on your machine e.g continuouscontrol
+
+3. Change the directory to the root folder of the freshly cloned repository and install the required python dependencies:
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. The environment for windows is already present in the repo. But if you need to download it for other OS, use one of the links below.  You need only select the environment that matches your operating system:
     - Linux: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Linux.zip)
     - Mac OSX: [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher.app.zip)
     - Windows (32-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Windows_x86.zip)
     - Windows (64-bit): [click here](https://s3-us-west-1.amazonaws.com/udacity-drlnd/P2/Reacher/Reacher_Windows_x86_64.zip)
     
-3. If downloaded a environment, make sure you place the file in the root folder, and unzip (or decompress) the file. 
+4. If you downloaded a environment, make sure you place the file in the root folder, and unzip (or decompress) the file. 
 
-4. To train the model, open the `Report.ipynb` file in a jupyter notebook and follow the instructions.
+5. To train the model, open the `Report.ipynb` file in a jupyter notebook and follow the instructions.
 
+6. There are also existing trained model files (checkpoint_actor.pth and checkpoint_critic.pth) that are part of the repository. You can follow the instructions in `Report.ipynb` file to see the trained models in action. 
