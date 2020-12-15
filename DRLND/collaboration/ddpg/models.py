@@ -25,7 +25,7 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
         fc1_output_size = 256
         self.fc1 = nn.Linear(state_size,fc1_output_size)
-        self.fc2 = nn.Linear(fc1_output_size+ (action_size*2),512)
+        self.fc2 = nn.Linear(fc1_output_size + (action_size*2),512)
         self.bn2 = nn.BatchNorm1d(num_features=512)
         self.fc3 = nn.Linear(512,1)
 

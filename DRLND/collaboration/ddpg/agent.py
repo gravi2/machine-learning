@@ -1,25 +1,32 @@
 from utils.OUNoise import OUNoise
 from torch import nn
 from torch import optim
+import torch.nn.functional as F
 import torch
 from .models import Actor, Critic
 import numpy as np
 
+
 CONFIG = {
-    "BUFFER_SIZE" : int(1e5),
+    "BUFFER_SIZE" : int(1e6),
     "BATCH_SIZE" : 128,
-    "GAMMA" : 0.999,
-    "TAU" : 0.0001,
+    "GAMMA" : 0.99,
+    "TAU" : 1e-1,
     "ACTOR_LR" : 1e-3,
     "CRITIC_LR" : 3e-3,
     "CRITIC_WEIGHT_DECAY": 0,
     "LEARN_EVERY" : 1,
     "LEARN_TIMES" : 1,
-    "NOISE" : True,
+    "LEARN_AFTER": 500,
     "GRADIENT_CLIP": True,
-    "GRADIENT_CLIP_VALUE": 1
+    "GRADIENT_CLIP_VALUE": 1,
+    "NOISE" : True,
+    "NOISE_STOP_AFTER": 800,
+    "OU_SIGMA": 0.2,
+    "OU_THETA": 0.12,
+    "PRIORITY_EPS" : 0.01,    # small factor to ensure that no experience has zero sample probability
+    "PRIORITY_ALPHA" : 0.5    # how much to prioritize replay of high-error experiences    
 }
-
 class Agent(object):
 
     def __init__(self,env, state_size, action_size,memory, device) -> None:
@@ -28,8 +35,8 @@ class Agent(object):
         self.device = device
 
         #Actor
-        self.actor = Actor(state_size,action_size)          # used for learning (most upto date)
-        self.target_actor = Actor(state_size,action_size)   # used for prediction (less updates)
+        self.actor = Actor(state_size*2,action_size)          # used for learning (most upto date)
+        self.target_actor = Actor(state_size*2,action_size)   # used for prediction (less updates)
         self.actor_optimizer = optim.Adam(self.actor.parameters(),lr=CONFIG["ACTOR_LR"])
 
         #Critic
@@ -47,7 +54,7 @@ class Agent(object):
 
         #OU Noise
         if CONFIG["NOISE"]:
-            self.noise = OUNoise(action_size,sigma=0.2)
+            self.noise = OUNoise(action_size,theta=CONFIG["OU_THETA"], sigma=CONFIG["OU_SIGMA"])
 
     def reset(self):
         if CONFIG["NOISE"]:
@@ -64,27 +71,23 @@ class Agent(object):
             # add the noise & clip the actions between -1 and 1
             n = self.noise.noise()
             actions = actions + (n * noise_scale)
+            self.noise.reset()
             #print ("Noise={},Scale={},Final={}".format(n,noise_scale,n*noise_scale))
 
         # all actions between -1 and 1
         actions = np.clip(actions, -1, 1)
-        return actions.squeeze().detach()
-
+        return actions
 
     def add_step(self,states,actions,rewards,next_states,dones):
         # add the experience to the memory
         # Experience will contain:
-        # states : Observations by each agent [2 x 24]
-        # states_full: Observation by all agents flattened in one [ 1 x 48 ]
+        # states: Observation by all agents flattened in one [ 1 x 48 ]
         # actions : Actions taken by each agent [ 2 x 2]
         # rewards : Rewards for each agent [2 x 1]
-        # next_states: Next Observations by each agent [2 x 24]
-        # next_states_full: Next Observation by all agents flattened in one [ 1 x 48 ]
+        # next_states: Next Observation by all agents flattened in one [ 1 x 48 ]
         # dones : Dones by each agent [ 2 x 1 ]        
-
-        states_full = states.reshape(1,-1).squeeze(0)
-        next_states_full = next_states.reshape(1,-1).squeeze(0)
-        self.memory.add(states,states_full,actions,rewards,next_states,next_states_full,dones)
+        priority = (abs(rewards) + CONFIG["PRIORITY_EPS"])**CONFIG["PRIORITY_ALPHA"]  
+        self.memory.add(states,actions,rewards,next_states,dones, priority)
     
     def learn(self,agent_index):
         # learn every LEARN_EVERY STEPS
@@ -95,19 +98,21 @@ class Agent(object):
 
     def _learn(self,agent_index):
         # get samples from previous experiences i.e replay buffer
-        states,states_full, actions,rewards,next_states,next_states_full, dones = self.memory.sample()
+        states,actions,rewards,next_states,dones = self.memory.sample()
 
         # *************** Update Critic ******************
         # prepare the inputs to the critic. 
 
-        #print (states.shape,states_full.shape, actions.shape, rewards.shape, next_states.shape, next_states_full.shape,dones.shape)
-        #torch.Size([64, 2, 24]) torch.Size([64, 48]) torch.Size([64, 2, 2]) torch.Size([64, 2]) torch.Size([64, 2, 24]) torch.Size([64, 48]) torch.Size([64, 2])
-
-        Qval = self.critic(states_full, actions.reshape(CONFIG["BATCH_SIZE"],-1))
         next_actions = self.target_actor(next_states)
-        next_q = self.target_critic(next_states_full, next_actions.reshape(CONFIG["BATCH_SIZE"],-1))
-        Qnext = rewards[:, agent_index] + (CONFIG["GAMMA"] * next_q * (1-dones[:, agent_index])) 
-        Qloss = self.critic_criterion(Qval,Qnext)
+        if agent_index == 0:
+            next_actions = torch.cat((next_actions, actions[:,2:]), dim=1)
+        else:
+            next_actions = torch.cat((actions[:,:2], next_actions), dim=1)
+
+        next_q = self.target_critic(next_states,next_actions )
+        Qnext = rewards + (CONFIG["GAMMA"] * next_q * (1-dones)) 
+        Qval = self.critic(states, actions.reshape(CONFIG["BATCH_SIZE"],-1))
+        Qloss = F.mse_loss(Qval,Qnext)
         #Update critic Loss 
         self.critic_optimizer.zero_grad()
         Qloss.backward()
@@ -118,10 +123,14 @@ class Agent(object):
 
         # *********** Update Actor ******************
         # get the actor policy loss
+
         local_actions = self.actor(states)
-        local_actions = local_actions.reshape(CONFIG["BATCH_SIZE"],-1)
+        if agent_index == 0:
+            local_actions = torch.cat((local_actions, actions[:,2:]), dim=1)
+        else:
+            local_actions = torch.cat((actions[:,:2], local_actions), dim=1)
         #print(local_actions.shape)
-        policy_loss = -self.critic(states_full,local_actions).mean()
+        policy_loss = -self.critic(states,local_actions).mean()
         # Update actor loss
         self.actor_optimizer.zero_grad()
         policy_loss.backward()
@@ -139,3 +148,7 @@ class Agent(object):
     def load_checkpoint(self,checkpoint_prefix):
         self.actor.load_state_dict(torch.load( '{}_actor.pth'.format(checkpoint_prefix),map_location=lambda storage, loc: storage))
         self.critic.load_state_dict(torch.load( '{}_critic.pth'.format(checkpoint_prefix),map_location=lambda storage, loc: storage))
+
+    def save_checkpoints(self,name):
+        torch.save(self.actor.state_dict(), f'{name}_actor.pth')
+        torch.save(self.critic.state_dict(), f'{name}_critic.pth')

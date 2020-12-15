@@ -22,7 +22,6 @@ class CollaborationSolution(object):
             self.wandb.init(project="collaboration",config=CONFIG)
 
 
-
     def train(self, num_episodes=10):
         env = self.env
         # get the default brain
@@ -52,47 +51,53 @@ class CollaborationSolution(object):
         agent1 = Agent(env,state_size,action_size,memory, device)
         agent2 = Agent(env,state_size,action_size,memory, device)
 
-        noise_scale = 10.0
-        noise_reduction = 0.99
+        # noise settings
+        add_noise = True
+        noise_scale = 5.0
+        noise_reduction = noise_scale/CONFIG["NOISE_STOP_AFTER"]
+
+        #scores
         running_scores = []
+        best_score = 0.05
         for episode in range(0,num_episodes):
             env_info = env.reset(train_mode=True)[brain_name]
             agent1.reset()
             agent2.reset()
             scores = np.zeros(num_agents)                          # initialize the score (for each agent)
             step = 0
-            noise_scale *= noise_reduction
+            noise_scale -= noise_reduction
             while True:
-                action1 = agent1.action(states[0],noise_scale=noise_scale, step=step).numpy()   # select an action (for each agent)
-                action2 = agent2.action(states[1],noise_scale=noise_scale, step=step).numpy()   # select an action (for each agent)
-                actions_array = np.stack((action1,action2))
+                states = states.reshape(1,-1)
+                action1 = agent1.action(states,add_noise=add_noise,noise_scale=noise_scale, step=step).numpy()   # select an action (for each agent)
+                action2 = agent2.action(states,add_noise=add_noise,noise_scale=noise_scale, step=step).numpy()   # select an action (for each agent)
+                actions = np.reshape([action1,action2], (1, num_agents*action_size))
 
-                # transpose the list of list
-                # flip the first two indices
-                # input to step requires the first index to correspond to number of parallel agents
-                actions = np.rollaxis(actions_array,1)
-
-                #print(actions.shape)
-                #print(actions)
                 env_info = env.step(actions)[brain_name]           # send all actions to tne environment
                 next_states = env_info.vector_observations         # get next state (for each agent)
+                next_states = next_states.reshape(1,-1)
                 rewards = env_info.rewards                         # get reward (for each agent)
                 dones = env_info.local_done                        # see if episode finished
-                agent1.add_step(states,actions,rewards,next_states,dones) #remember the step (for each agent)
-                agent1.learn(0)
-                agent2.learn(1) 
-                scores += np.max(env_info.rewards)                         # update the score (for each agent)
+                agent1.add_step(states,actions,rewards[0],next_states,dones) #remember the step for agent1
+                agent1.add_step(states,actions,rewards[1],next_states,dones) #remember the step for agent2
+                if episode > CONFIG["LEARN_AFTER"]:
+                    agent1.learn(0)
+                    agent2.learn(1)
+                
+                if episode > CONFIG["NOISE_STOP_AFTER"]:
+                    add_noise = False                              # stop adding the noise once we have some samples
+
+                scores += np.max(env_info.rewards)                 # update the score (for each agent)
                 states = next_states                               # roll over states to next time step
                 step += 1
                 if np.any(dones):                                  # exit loop if episode finished
                     break
             
-            episode_avg_score = np.mean(scores)
-            running_scores.append(episode_avg_score)
+            episode_score = np.max(scores)
+            running_scores.append(episode_score)
             avg_score_100_episodes=np.mean(running_scores[-100:])
-            print('Episode:{}, Total score (averaged over agents) this episode: {}, Avg over 100 episodes: {}'.format(episode,episode_avg_score,avg_score_100_episodes))
+            print('Episode:{}, Total score (averaged over agents) this episode: {}, Avg over 100 episodes: {}'.format(episode,episode_score,avg_score_100_episodes))
             if self.enable_wandb: 
-                self.wandb.log({"episode_avg_score": episode_avg_score, 
+                self.wandb.log({"episode_avg_score": episode_score, 
                     "avg_score_100_episodes": avg_score_100_episodes,
                     "max_steps": step,
                     "agent1_score":scores[0],
@@ -102,12 +107,19 @@ class CollaborationSolution(object):
             
             if avg_score_100_episodes > 0.5 and episode > 100:
                 print('Environment solved in Episode:{}'.format(episode-100))
-                torch.save(agent1.actor.state_dict(), 'checkpoint_agent1_actor.pth')
-                torch.save(agent1.critic.state_dict(), 'checkpoint_agent1_critic.pth')
-                torch.save(agent2.actor.state_dict(), 'checkpoint_agent2_actor.pth')
-                torch.save(agent2.critic.state_dict(), 'checkpoint_agent2_critic.pth')
+                self.save_models(agent1,agent2,"solved")
                 break
+            elif avg_score_100_episodes > best_score:
+                best_score = avg_score_100_episodes
+                print('Best avg_score_100_episodes seen in Episode:{}'.format(episode))
+                self.save_models(agent1,agent2,avg_score_100_episodes)
+
+
         return running_scores
+
+    def save_models(self,agent1, agent2, name):
+        agent1.save_checkpoints(f'./checkpoints/checkpoint-{name}-agent1')
+        agent2.save_checkpoints(f'./checkpoints/checkpoint-{name}-agent2')
 
 
     def watch_trained(self, checkpoint):

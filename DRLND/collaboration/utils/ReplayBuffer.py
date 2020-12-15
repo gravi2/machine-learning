@@ -25,65 +25,62 @@ class ReplayBuffer(object):
         self.device = device
 
         self.experience = namedtuple('Experience', field_names=[
-                                     'state', 'state_full', 'action', 'reward', 'next_state', 'next_state_full', 'done'])
+                                     'state', 'action', 'reward', 'next_state', 'done','priority'])
         self.memory = deque(maxlen=BUFFER_SIZE)
 
-    def add(self, state, state_full, action, reward, next_state, next_state_full, done):
+    def add(self, state, action, reward, next_state, done, priority):
         """Add the experience(namedtuple) to the experiences memory
 
         Args:
             state ([type]): [description]
-            state_full ([type]): [description]
             action ([type]): [description]
             reward ([type]): [description]
             next_state ([type]): [description]
-            next_state_full ([type]): [description]
             done (function): [description]
         """
-        e = self.experience(state, state_full, action, reward,
-                            next_state, next_state_full, done)
+        e = self.experience(state, action, reward,
+                            next_state, done, priority)
         self.memory.append(e)
 
-    def sample1(self) -> List:
+    def sample(self,by_priority=True) -> List:
         """Returns a sample of batch_size from the experiences
         Returns:
             tuple: Experiences returned as a tuple(states,actions,rewards,next_states,dones) of lists each of batch_size 
         """
-        experiences = random.sample(self.memory, self.batch_size)
+
+        if by_priority:
+            # get priorities
+            priorities = [self.memory[i].priority for i in range(len(self))]
+
+            # get sample numbers by priority
+            cumsum_priorities = np.cumsum(priorities)
+            stopping_values = [random.random()*sum(priorities) for i in range(self.batch_size)]
+            stopping_values.sort()  
+            # stopping values are where we pick the experience samples, sorting them (of size batch_size) is much faster than sorting the priorities, and having this sorted lets us go through the cumsum_priorities list just once
+
+            experience_idx = []
+            experiences = []
+            for i in range(len(cumsum_priorities)-1):
+                if len(stopping_values) <= 0:
+                    break
+                if stopping_values[0] < cumsum_priorities[i+1]:
+                    experience_idx.append(i)
+                    experiences.append(self.memory[i])
+                    stopping_values.pop(0)
+        else:
+            experiences = random.sample(self.memory, self.batch_size)
 
         states = torch.from_numpy(np.vstack(
             [e.state for e in experiences if e is not None])).float().to(self.device)
-        states_full = torch.from_numpy(np.vstack(
-            [e.state_full for e in experiences if e is not None])).float().to(self.device)
         actions = torch.from_numpy(np.vstack(
             [e.action for e in experiences if e is not None])).float().to(self.device)
         rewards = torch.from_numpy(np.vstack(
             [e.reward for e in experiences if e is not None])).float().to(self.device)
         next_states = torch.from_numpy(np.vstack(
             [e.next_state for e in experiences if e is not None])).float().to(self.device)
-        next_states_full = torch.from_numpy(np.vstack(
-            [e.next_state_full for e in experiences if e is not None])).float().to(self.device)
         dones = torch.from_numpy(np.vstack(
             [e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(self.device)
-        return states,states_full, actions, rewards, next_states, next_states_full, dones
-
-    def sample(self) -> List:
-        experiences = random.sample(self.memory, self.batch_size)
-        states = torch.from_numpy(np.array(
-            [e.state for e in experiences if e is not None])).float().to(self.device)
-        states_full = torch.from_numpy(np.array(
-            [e.state_full for e in experiences if e is not None])).float().to(self.device)
-        actions = torch.from_numpy(np.array(
-            [e.action for e in experiences if e is not None])).float().to(self.device)
-        rewards = torch.from_numpy(np.array(
-            [e.reward for e in experiences if e is not None])).float().to(self.device)
-        next_states = torch.from_numpy(np.array(
-            [e.next_state for e in experiences if e is not None])).float().to(self.device)
-        next_states_full = torch.from_numpy(np.array(
-            [e.next_state_full for e in experiences if e is not None])).float().to(self.device)
-        dones = torch.from_numpy(np.array(
-            [e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(self.device)
-        return states, states_full, actions, rewards, next_states, next_states_full, dones
+        return states,actions, rewards, next_states,dones
 
     def __len__(self):
         """Return the len of the current memory
