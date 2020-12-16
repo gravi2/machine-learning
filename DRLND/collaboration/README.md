@@ -1,6 +1,6 @@
 [//]: # (Image References)
 
-[image1]: https://user-images.githubusercontent.com/10624937/42135623-e770e354-7d12-11e8-998d-29fc74429ca2.gif "Trained Agent"
+[image1]: ./images/trained.gif "Trained Agent"
 
 # Project 3: Collaboration and Competition
 
@@ -33,7 +33,7 @@ The environment is considered solved, when the average (over 100 episodes) of th
 * Windows:
     ```
     conda create --name drlnd python=3.6 
-    activate drlnd
+    conda activate drlnd
     ```
 
 2. Clone this repository in a location on your machine
