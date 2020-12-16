@@ -9,11 +9,11 @@ import numpy as np
 # Hyperparameters used
 CONFIG = {
     "BUFFER_SIZE" : int(1e6),
-    "BATCH_SIZE" : 512,
-    "GAMMA" : 0.98,
-    "TAU" : 1e-1,
+    "BATCH_SIZE" : 128,
+    "GAMMA" : 0.99,
+    "TAU" : 7e-2,
     "ACTOR_LR" : 1e-3,
-    "CRITIC_LR" : 3e-3,
+    "CRITIC_LR" : 1e-3,
     "CRITIC_WEIGHT_DECAY": 0,
     "LEARN_EVERY" : 1,
     "LEARN_TIMES" : 1,
@@ -33,6 +33,7 @@ class Agent(object):
         self.env = env
         self.action_size = action_size
         self.device = device
+        self.number_of_agents = 1  # for our case, each agent instance deals with its own agent only
 
         #Actor
         self.actor = Actor(state_size*2,action_size).to(self.device)          # used for learning (most upto date)
@@ -54,17 +55,19 @@ class Agent(object):
 
         #OU Noise
         if CONFIG["NOISE"]:
-            self.noise = OUNoise(action_size,theta=CONFIG["OU_THETA"], sigma=CONFIG["OU_SIGMA"])
+            self.noise = OUNoise(self.number_of_agents,theta=CONFIG["OU_THETA"], sigma=CONFIG["OU_SIGMA"])
 
     def reset(self):
         if CONFIG["NOISE"]:
             self.noise.reset()
 
     def action(self,states,add_noise=True,noise_scale=1.0,step=0):
-        states = torch.from_numpy(states).unsqueeze(0).float().to(self.device)
+        states = torch.from_numpy(states).float().to(self.device)
+        actions = np.zeros((self.number_of_agents, self.action_size))
         self.actor.eval()
         with torch.no_grad():
-            actions = self.actor(states).cpu()
+            for agent,state in enumerate(states):
+                actions[agent,:] = self.actor(state).cpu().data.numpy()
         # turn back the training mode to learn from the step
         self.actor.train()
         if CONFIG["NOISE"] and add_noise:
@@ -73,7 +76,6 @@ class Agent(object):
             actions = actions + (n * noise_scale)
             self.noise.reset()
             #print ("Noise={},Scale={},Final={}".format(n,noise_scale,n*noise_scale))
-
         # all actions between -1 and 1
         actions = np.clip(actions, -1, 1)
         return actions
@@ -112,7 +114,7 @@ class Agent(object):
             next_actions = torch.cat((actions[:,:2], next_actions), dim=1)
         next_q = self.target_critic(next_states,next_actions )
         Qnext = rewards + (CONFIG["GAMMA"] * next_q * (1-dones)) 
-        Qval = self.critic(states, actions.reshape(CONFIG["BATCH_SIZE"],-1))
+        Qval = self.critic(states, actions)
         Qloss = F.mse_loss(Qval,Qnext)
         #Update critic Loss 
         self.critic_optimizer.zero_grad()

@@ -67,8 +67,8 @@ class CollaborationSolution(object):
             noise_scale -= noise_reduction
             while True:
                 states = states.reshape(1,-1)
-                action1 = agent1.action(states,add_noise=add_noise,noise_scale=noise_scale, step=step).cpu().numpy()   # select an action (for each agent)
-                action2 = agent2.action(states,add_noise=add_noise,noise_scale=noise_scale, step=step).cpu().numpy()   # select an action (for each agent)
+                action1 = agent1.action(states,add_noise=add_noise,noise_scale=noise_scale, step=step)   # select an action (for each agent)
+                action2 = agent2.action(states,add_noise=add_noise,noise_scale=noise_scale, step=step)   # select an action (for each agent)
                 actions = np.reshape([action1,action2], (1, num_agents*action_size))
 
                 env_info = env.step(actions)[brain_name]           # send all actions to tne environment
@@ -77,7 +77,7 @@ class CollaborationSolution(object):
                 rewards = env_info.rewards                         # get reward (for each agent)
                 dones = env_info.local_done                        # see if episode finished
                 agent1.add_step(states,actions,rewards[0],next_states,dones) #remember the step for agent1
-                agent1.add_step(states,actions,rewards[1],next_states,dones) #remember the step for agent2
+                agent2.add_step(states,actions,rewards[1],next_states,dones) #remember the step for agent2
                 if episode > CONFIG["LEARN_AFTER"]:
                     agent1.learn(0)
                     agent2.learn(1)

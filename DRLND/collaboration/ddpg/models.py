@@ -8,8 +8,8 @@ class Actor(nn.Module):
         super(Actor, self).__init__()
         self.fc1 = nn.Linear(state_size,256)
         self.bn1 = nn.BatchNorm1d(num_features=256)
-        self.fc2 = nn.Linear(256,512)
-        self.fc3 = nn.Linear(512,action_size)
+        self.fc2 = nn.Linear(256,128)
+        self.fc3 = nn.Linear(128,action_size)
 
     def forward(self,state):
         x = self.fc1(state)
@@ -17,7 +17,7 @@ class Actor(nn.Module):
         x = F.relu(x)
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
-        x = F.tanh(x)
+        x = torch.tanh(x)
         return x
 
 class Critic(nn.Module):
@@ -25,9 +25,9 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
         fc1_output_size = 256
         self.fc1 = nn.Linear(state_size,fc1_output_size)
-        self.fc2 = nn.Linear(fc1_output_size + (action_size*2),512)
-        self.bn2 = nn.BatchNorm1d(num_features=512)
-        self.fc3 = nn.Linear(512,1)
+        self.fc2 = nn.Linear(fc1_output_size + (action_size*2),128)
+        self.bn2 = nn.BatchNorm1d(num_features=128)
+        self.fc3 = nn.Linear(128,1)
 
     def forward(self,state,action):
         x = self.fc1(state)
