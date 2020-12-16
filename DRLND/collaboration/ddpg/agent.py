@@ -35,13 +35,13 @@ class Agent(object):
         self.device = device
 
         #Actor
-        self.actor = Actor(state_size*2,action_size)          # used for learning (most upto date)
-        self.target_actor = Actor(state_size*2,action_size)   # used for prediction (less updates)
+        self.actor = Actor(state_size*2,action_size).to(self.device)          # used for learning (most upto date)
+        self.target_actor = Actor(state_size*2,action_size).to(self.device)   # used for prediction (less updates)
         self.actor_optimizer = optim.Adam(self.actor.parameters(),lr=CONFIG["ACTOR_LR"])
 
         #Critic
-        self.critic = Critic(state_size*2 ,action_size)        # used for learning (most upto date)
-        self.target_critic = Critic(state_size*2 ,action_size) # used for prediction (less updates)
+        self.critic = Critic(state_size*2 ,action_size).to(self.device)        # used for learning (most upto date)
+        self.target_critic = Critic(state_size*2 ,action_size).to(self.device) # used for prediction (less updates)
         self.critic_criterion = nn.MSELoss()
         self.critic_optimizer = optim.Adam(self.critic.parameters(),lr=CONFIG["CRITIC_LR"],weight_decay=CONFIG["CRITIC_WEIGHT_DECAY"])
 
@@ -64,7 +64,7 @@ class Agent(object):
         states = torch.from_numpy(states).unsqueeze(0).float().to(self.device)
         self.actor.eval()
         with torch.no_grad():
-            actions = self.actor(states)
+            actions = self.actor(states).cpu()
         # turn back the training mode to learn from the step
         self.actor.train()
         if CONFIG["NOISE"] and add_noise:
