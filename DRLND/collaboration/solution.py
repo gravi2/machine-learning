@@ -17,7 +17,6 @@ class CollaborationSolution(object):
             import logging
             logger = logging.getLogger("wandb")
             logger.setLevel(logging.WARNING)
-
             self.wandb = wandb
             self.wandb.init(project="collaboration",config=CONFIG)
 
@@ -58,7 +57,7 @@ class CollaborationSolution(object):
 
         #scores
         running_scores = []
-        best_score = 0.05
+        best_score = 0.1
         for episode in range(0,num_episodes):
             env_info = env.reset(train_mode=True)[brain_name]
             agent1.reset()
@@ -114,7 +113,6 @@ class CollaborationSolution(object):
                 print('Best avg_score_100_episodes seen in Episode:{}'.format(episode))
                 self.save_models(agent1,agent2,avg_score_100_episodes)
 
-
         return running_scores
 
     def save_models(self,agent1, agent2, name):
@@ -145,10 +143,16 @@ class CollaborationSolution(object):
         print('The state for the first agent looks like:', states[0])        
 
         # create agents
-        agent = Agent(env,state_size,action_size,device)
+        # create the experience replay buffer. To be used by all agents
+        memory = ReplayBuffer(CONFIG["BUFFER_SIZE"],CONFIG["BATCH_SIZE"],device)
+
+        # create agents
+        agent1 = Agent(env,state_size,action_size,memory, device)
+        agent2 = Agent(env,state_size,action_size,memory, device)
 
         # Load the saved checkpoints
-        agent.load_checkpoint(checkpoint)
+        agent1.load_checkpoint(f'{checkpoint}-agent1')
+        agent2.load_checkpoint(f'{checkpoint}-agent2')
 
         env = self.env
         # get the default brain
@@ -156,13 +160,18 @@ class CollaborationSolution(object):
         brain = env.brains[brain_name]
         env_info = env.reset(train_mode=False)[brain_name]
         scores = np.zeros(num_agents)                          # initialize the score (for each agent)
+        step = 0
         while True:
-            actions = agent.action(states).numpy()             # select an action (for each agent)
+            states = states.reshape(1,-1)
+            action1 = agent1.action(states,add_noise=False, step=step).numpy()   # select an action (for each agent)
+            action2 = agent2.action(states,add_noise=False, step=step).numpy()   # select an action (for each agent)
+            actions = np.reshape([action1,action2], (1, num_agents*action_size))
+
             env_info = env.step(actions)[brain_name]           # send all actions to tne environment
             next_states = env_info.vector_observations         # get next state (for each agent)
             rewards = env_info.rewards                         # get reward (for each agent)
             dones = env_info.local_done                        # see if episode finished
-            scores += env_info.rewards                         # update the score (for each agent)
+            scores += rewards                         # update the score (for each agent)
             states = next_states                               # roll over states to next time step
             if np.any(dones):                                  # exit loop if episode finished
                 break

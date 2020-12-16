@@ -6,11 +6,11 @@ import torch
 from .models import Actor, Critic
 import numpy as np
 
-
+# Hyperparameters used
 CONFIG = {
     "BUFFER_SIZE" : int(1e6),
-    "BATCH_SIZE" : 128,
-    "GAMMA" : 0.99,
+    "BATCH_SIZE" : 512,
+    "GAMMA" : 0.98,
     "TAU" : 1e-1,
     "ACTOR_LR" : 1e-3,
     "CRITIC_LR" : 3e-3,
@@ -90,11 +90,14 @@ class Agent(object):
         self.memory.add(states,actions,rewards,next_states,dones, priority)
     
     def learn(self,agent_index):
-        # learn every LEARN_EVERY STEPS
-        steps_taken = len(self.memory)
-        if steps_taken > CONFIG["BATCH_SIZE"] and steps_taken % CONFIG["LEARN_EVERY"] == 0:
-            for i in range(0,CONFIG["LEARN_TIMES"]):
-                self._learn(agent_index)
+        try:
+            # learn every LEARN_EVERY STEPS
+            steps_taken = len(self.memory)
+            if steps_taken > CONFIG["BATCH_SIZE"] and steps_taken % CONFIG["LEARN_EVERY"] == 0:
+                for i in range(0,CONFIG["LEARN_TIMES"]):
+                    self._learn(agent_index)
+        except Exception as e:
+            print(e)
 
     def _learn(self,agent_index):
         # get samples from previous experiences i.e replay buffer
@@ -102,13 +105,11 @@ class Agent(object):
 
         # *************** Update Critic ******************
         # prepare the inputs to the critic. 
-
         next_actions = self.target_actor(next_states)
         if agent_index == 0:
             next_actions = torch.cat((next_actions, actions[:,2:]), dim=1)
         else:
             next_actions = torch.cat((actions[:,:2], next_actions), dim=1)
-
         next_q = self.target_critic(next_states,next_actions )
         Qnext = rewards + (CONFIG["GAMMA"] * next_q * (1-dones)) 
         Qval = self.critic(states, actions.reshape(CONFIG["BATCH_SIZE"],-1))
@@ -120,10 +121,8 @@ class Agent(object):
             torch.nn.utils.clip_grad_norm_(self.critic.parameters(), CONFIG['GRADIENT_CLIP_VALUE'])
         self.critic_optimizer.step()
 
-
         # *********** Update Actor ******************
         # get the actor policy loss
-
         local_actions = self.actor(states)
         if agent_index == 0:
             local_actions = torch.cat((local_actions, actions[:,2:]), dim=1)
