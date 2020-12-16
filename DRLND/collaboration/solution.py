@@ -163,8 +163,8 @@ class CollaborationSolution(object):
         step = 0
         while True:
             states = states.reshape(1,-1)
-            action1 = agent1.action(states,add_noise=False, step=step).numpy()   # select an action (for each agent)
-            action2 = agent2.action(states,add_noise=False, step=step).numpy()   # select an action (for each agent)
+            action1 = agent1.action(states,add_noise=False, step=step)   # select an action (for each agent)
+            action2 = agent2.action(states,add_noise=False, step=step)   # select an action (for each agent)
             actions = np.reshape([action1,action2], (1, num_agents*action_size))
 
             env_info = env.step(actions)[brain_name]           # send all actions to tne environment
